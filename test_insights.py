@@ -11,7 +11,7 @@ import os
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from insights import GitHubAPIClient, NetworkAnalyzer
+from insights import GitHubAPIClient, NetworkAnalyzer, generate_markdown_output, is_safe_github_url, escape_markdown_table_content
 
 
 class TestGitHubAPIClient(unittest.TestCase):
@@ -131,6 +131,60 @@ class TestUtilityFunctions(unittest.TestCase):
         self.assertEqual(len(gems), 2)
         self.assertEqual(gems[0][0], 'repo1')  # Highest network stars
         self.assertEqual(gems[1][0], 'repo3')
+    
+    def test_generate_markdown_output(self):
+        """Test markdown output generation."""
+        repo_stars = {
+            'owner/repo1': {'count': 10, 'global_stars': 1000, 'description': 'Test repo 1', 'url': 'https://github.com/owner/repo1'},
+            'owner/repo2': {'count': 5, 'global_stars': 500, 'description': 'Test repo 2', 'url': 'https://github.com/owner/repo2'}
+        }
+        
+        user_follows = {
+            'user1': 8,
+            'user2': 3
+        }
+        
+        hidden_gems = [
+            ('owner/repo2', {'count': 5, 'global_stars': 500, 'description': 'Test repo 2', 'url': 'https://github.com/owner/repo2'})
+        ]
+        
+        markdown = generate_markdown_output('testuser', 100, repo_stars, user_follows, hidden_gems)
+        
+        # Verify markdown structure
+        self.assertIn('# GitHub Network Insight Report', markdown)
+        self.assertIn('**Target User:** testuser', markdown)
+        self.assertIn('**Audience Size:** 100', markdown)
+        self.assertIn('## 📊 Top 10 Commonly Starred Repositories', markdown)
+        self.assertIn('## 💎 Top 10 Hidden Gems', markdown)
+        self.assertIn('## 👥 Top 10 Thought Leaders', markdown)
+        
+        # Verify markdown links
+        self.assertIn('[owner/repo1](https://github.com/owner/repo1)', markdown)
+        self.assertIn('[user1](https://github.com/user1)', markdown)
+        
+        # Verify table structure
+        self.assertIn('| Rank | Repository | Network Stars | Global Stars | Description |', markdown)
+        self.assertIn('|------|------------|---------------|--------------|-------------|', markdown)
+    
+    def test_is_safe_github_url(self):
+        """Test GitHub URL validation."""
+        # Valid GitHub URLs
+        self.assertTrue(is_safe_github_url('https://github.com/user/repo'))
+        self.assertTrue(is_safe_github_url('https://github.com/user'))
+        
+        # Invalid URLs
+        self.assertFalse(is_safe_github_url(''))
+        self.assertFalse(is_safe_github_url('http://github.com/user/repo'))  # Not HTTPS
+        self.assertFalse(is_safe_github_url('https://evil.com/malicious'))
+        self.assertFalse(is_safe_github_url('javascript:alert(1)'))
+        self.assertFalse(is_safe_github_url(None))
+    
+    def test_escape_markdown_table_content(self):
+        """Test markdown table content escaping."""
+        self.assertEqual(escape_markdown_table_content('normal text'), 'normal text')
+        self.assertEqual(escape_markdown_table_content('text | with | pipes'), 'text \\| with \\| pipes')
+        self.assertEqual(escape_markdown_table_content(''), '')
+        self.assertEqual(escape_markdown_table_content(None), '')
 
 
 if __name__ == '__main__':

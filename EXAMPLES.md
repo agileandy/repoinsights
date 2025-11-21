@@ -56,23 +56,36 @@ Default is 30 stars per user.
 
 ### JSON Output
 
-Get results in JSON format:
+Get results in JSON format for terminal output:
 
 ```bash
-python insights.py agileandy --output json
+python insights.py agileandy --format json
 ```
 
-### Save to File
+### Save to Markdown File
 
-Save JSON output to a file:
+Save results to a markdown file (in addition to terminal display):
 
 ```bash
-python insights.py agileandy --output json --output-file results.json
+python insights.py agileandy --output results.md
+```
+
+This will display the results in the terminal with clickable links and word-wrapped descriptions, and also save a markdown version to `results.md`.
+
+You can combine the markdown output with JSON format:
+
+```bash
+python insights.py agileandy --format json --output results.md
 ```
 
 ## Example Output
 
 ### Text Format (Default)
+
+The terminal output now features:
+- **Clickable repository names and usernames** (when supported by your terminal)
+- **Word-wrapped descriptions** instead of truncated text
+- **Clean table formatting**
 
 ```
 ================================================================================
@@ -82,28 +95,65 @@ Audience Size: 150
 
 📊 Top 10 Commonly Starred Repositories (Crowd Favorites)
 
-┏━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
-┃ Rank ┃ Repository        ┃ Network Stars┃ Global Stars ┃ Description    ┃
-┡━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
-│ 1    │ torvalds/linux    │ 12           │ 150000       │ Linux kernel   │
-│ 2    │ vercel/next.js    │ 10           │ 120000       │ React framework│
-└──────┴───────────────────┴──────────────┴──────────────┴────────────────┘
+┏━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Rank ┃ Repository        ┃ Network Stars┃ Global Stars ┃ Description                    ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 1    │ torvalds/linux    │ 12           │ 150000       │ Linux kernel source tree       │
+│ 2    │ vercel/next.js    │ 10           │ 120000       │ The React Framework for        │
+│      │                   │              │              │ Production - enables           │
+│      │                   │              │              │ functionality such as          │
+│      │                   │              │              │ server-side rendering          │
+└──────┴───────────────────┴──────────────┴──────────────┴────────────────────────────────┘
 
 💎 Top 10 Hidden Gems (High Network Overlap, Lower Global Popularity)
 
-┏━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
-┃ Rank ┃ Repository        ┃ Network Stars┃ Global Stars ┃ Description    ┃
-┡━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
-│ 1    │ user/hidden-tool  │ 8            │ 450          │ Useful utility │
-└──────┴───────────────────┴──────────────┴──────────────┴────────────────┘
+┏━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Rank ┃ Repository        ┃ Network Stars┃ Global Stars ┃ Description                    ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 1    │ user/hidden-tool  │ 8            │ 450          │ A useful utility for           │
+│      │                   │              │              │ developers that hasn't gotten  │
+│      │                   │              │              │ much mainstream attention      │
+└──────┴───────────────────┴──────────────┴──────────────┴────────────────────────────────┘
 
 👥 Top 10 Thought Leaders (People Followed by Your Audience)
 
-┏━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Rank ┃ Username      ┃ Network Follows┃ Profile URL                     ┃
-┡━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
-│ 1    │ tjholowaychuk │ 8              │ https://github.com/tjholowaychuk│
-└──────┴───────────────┴────────────────┴────────────────────────────────┘
+┏━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+┃ Rank ┃ Username      ┃ Network Follows┃
+┡━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
+│ 1    │ tjholowaychuk │ 8              │
+└──────┴───────────────┴────────────────┘
+
+*Note: Repository names and usernames are clickable links in terminals that support it (e.g., iTerm2, Windows Terminal, modern GNOME Terminal)*
+```
+
+### Markdown Format
+
+When you use the `--output` option to save to a markdown file, it generates a formatted markdown document with clickable links:
+
+```markdown
+# GitHub Network Insight Report
+
+**Target User:** agileandy
+**Audience Size:** 150
+
+## 📊 Top 10 Commonly Starred Repositories (Crowd Favorites)
+
+| Rank | Repository | Network Stars | Global Stars | Description |
+|------|------------|---------------|--------------|-------------|
+| 1 | [torvalds/linux](https://github.com/torvalds/linux) | 12 | 150000 | Linux kernel source tree |
+| 2 | [vercel/next.js](https://github.com/vercel/next.js) | 10 | 120000 | The React Framework for Production |
+
+## 💎 Top 10 Hidden Gems (High Network Overlap, Lower Global Popularity)
+
+| Rank | Repository | Network Stars | Global Stars | Description |
+|------|------------|---------------|--------------|-------------|
+| 1 | [user/hidden-tool](https://github.com/user/hidden-tool) | 8 | 450 | A useful utility for developers |
+
+## 👥 Top 10 Thought Leaders (People Followed by Your Audience)
+
+| Rank | Username | Network Follows |
+|------|----------|-----------------|
+| 1 | [tjholowaychuk](https://github.com/tjholowaychuk) | 8 |
 ```
 
 ### JSON Format

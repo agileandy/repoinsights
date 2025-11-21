@@ -35,13 +35,24 @@ python insights.py <username>
 
 - `--limit N`: Limit the number of network members to analyze (default: 100)
 - `--stars-per-user N`: Max starred repos to fetch per user (default: 30)
-- `--output FORMAT`: Output format (text or json, default: text)
+- `--format FORMAT`: Terminal output format (text or json, default: text)
+- `--output FILENAME`: Save output to markdown file (in addition to terminal output)
 
 ### Example
 
 ```bash
 python insights.py agileandy --limit 50
 ```
+
+### Save to Markdown File
+
+Save results to a markdown file in addition to terminal output:
+
+```bash
+python insights.py agileandy --output results.md
+```
+
+This will display the results in the terminal and save a markdown version to `results.md`.
 
 ## Requirements
 

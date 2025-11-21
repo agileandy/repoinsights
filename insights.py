@@ -255,6 +255,20 @@ class NetworkAnalyzer:
         return gems
 
 
+def is_safe_github_url(url: str) -> bool:
+    """Validate that URL is a safe GitHub URL."""
+    if not url:
+        return False
+    return url.startswith('https://github.com/')
+
+
+def escape_markdown_table_content(text: str) -> str:
+    """Escape special characters for markdown table content."""
+    if not text:
+        return ""
+    return text.replace('|', '\\|')
+
+
 def print_text_report(target_user: str, audience_size: int, repo_stars: Dict[str, Dict], 
                      user_follows: Dict[str, int], hidden_gems: List[Tuple[str, Dict]]):
     """Print a formatted text report."""
@@ -273,13 +287,16 @@ def print_text_report(target_user: str, audience_size: int, repo_stars: Dict[str
     table.add_column("Repository", style="cyan")
     table.add_column("Network Stars", justify="right", style="green")
     table.add_column("Global Stars", justify="right", style="yellow")
-    table.add_column("Description", style="white")
+    table.add_column("Description", style="white", overflow="fold")
     
     for idx, (repo_name, data) in enumerate(sorted_repos, 1):
-        desc = data['description'][:60] + "..." if data['description'] and len(data['description']) > 60 else data['description'] or ""
+        # Make repository name clickable if URL is available and valid
+        url = data.get('url', '')
+        repo_display = f"[link={url}]{repo_name}[/link]" if is_safe_github_url(url) else repo_name
+        desc = data['description'] or ""
         table.add_row(
             str(idx),
-            repo_name,
+            repo_display,
             str(data['count']),
             str(data['global_stars']),
             desc
@@ -296,13 +313,16 @@ def print_text_report(target_user: str, audience_size: int, repo_stars: Dict[str
     table.add_column("Repository", style="cyan")
     table.add_column("Network Stars", justify="right", style="green")
     table.add_column("Global Stars", justify="right", style="yellow")
-    table.add_column("Description", style="white")
+    table.add_column("Description", style="white", overflow="fold")
     
     for idx, (repo_name, data) in enumerate(hidden_gems[:10], 1):
-        desc = data['description'][:60] + "..." if data['description'] and len(data['description']) > 60 else data['description'] or ""
+        # Make repository name clickable if URL is available and valid
+        url = data.get('url', '')
+        repo_display = f"[link={url}]{repo_name}[/link]" if is_safe_github_url(url) else repo_name
+        desc = data['description'] or ""
         table.add_row(
             str(idx),
-            repo_name,
+            repo_display,
             str(data['count']),
             str(data['global_stars']),
             desc
@@ -320,18 +340,71 @@ def print_text_report(target_user: str, audience_size: int, repo_stars: Dict[str
     table.add_column("Rank", style="dim", width=6)
     table.add_column("Username", style="cyan")
     table.add_column("Network Follows", justify="right", style="green")
-    table.add_column("Profile URL", style="blue")
     
     for idx, (username, count) in enumerate(sorted_users, 1):
+        # Make username clickable
+        username_display = f"[link=https://github.com/{username}]{username}[/link]"
         table.add_row(
             str(idx),
-            username,
-            str(count),
-            f"https://github.com/{username}"
+            username_display,
+            str(count)
         )
     
     console.print(table)
     console.print()
+
+
+def generate_markdown_output(target_user: str, audience_size: int, repo_stars: Dict[str, Dict],
+                            user_follows: Dict[str, int], hidden_gems: List[Tuple[str, Dict]]) -> str:
+    """Generate markdown output."""
+    lines = []
+    
+    lines.append("# GitHub Network Insight Report")
+    lines.append(f"\n**Target User:** {target_user}")
+    lines.append(f"**Audience Size:** {audience_size}\n")
+    
+    # Top Commonly Starred Repos
+    lines.append("## 📊 Top 10 Commonly Starred Repositories (Crowd Favorites)\n")
+    
+    sorted_repos = sorted(repo_stars.items(), key=lambda x: x[1]['count'], reverse=True)[:10]
+    
+    lines.append("| Rank | Repository | Network Stars | Global Stars | Description |")
+    lines.append("|------|------------|---------------|--------------|-------------|")
+    
+    for idx, (repo_name, data) in enumerate(sorted_repos, 1):
+        # Make repository name a markdown link if URL is valid
+        url = data.get('url', '')
+        repo_link = f"[{repo_name}]({url})" if is_safe_github_url(url) else repo_name
+        desc = escape_markdown_table_content(data['description'] or "")
+        lines.append(f"| {idx} | {repo_link} | {data['count']} | {data['global_stars']} | {desc} |")
+    
+    # Hidden Gems
+    lines.append("\n## 💎 Top 10 Hidden Gems (High Network Overlap, Lower Global Popularity)\n")
+    
+    lines.append("| Rank | Repository | Network Stars | Global Stars | Description |")
+    lines.append("|------|------------|---------------|--------------|-------------|")
+    
+    for idx, (repo_name, data) in enumerate(hidden_gems[:10], 1):
+        # Make repository name a markdown link if URL is valid
+        url = data.get('url', '')
+        repo_link = f"[{repo_name}]({url})" if is_safe_github_url(url) else repo_name
+        desc = escape_markdown_table_content(data['description'] or "")
+        lines.append(f"| {idx} | {repo_link} | {data['count']} | {data['global_stars']} | {desc} |")
+    
+    # Influential People
+    lines.append("\n## 👥 Top 10 Thought Leaders (People Followed by Your Audience)\n")
+    
+    sorted_users = sorted(user_follows.items(), key=lambda x: x[1], reverse=True)[:10]
+    
+    lines.append("| Rank | Username | Network Follows |")
+    lines.append("|------|----------|-----------------|")
+    
+    for idx, (username, count) in enumerate(sorted_users, 1):
+        username_link = f"[{username}](https://github.com/{username})"
+        lines.append(f"| {idx} | {username_link} | {count} |")
+    
+    lines.append("")
+    return "\n".join(lines)
 
 
 def generate_json_output(target_user: str, audience_size: int, repo_stars: Dict[str, Dict],
@@ -386,9 +459,10 @@ def main():
                        help='Maximum number of network members to analyze (default: 100)')
     parser.add_argument('--stars-per-user', type=int, default=30,
                        help='Maximum starred repos to fetch per user (default: 30)')
-    parser.add_argument('--output', choices=['text', 'json'], default='text',
-                       help='Output format (default: text)')
-    parser.add_argument('--output-file', help='Save JSON output to file (only with --output json)')
+    parser.add_argument('--format', choices=['text', 'json'], default='text',
+                       help='Terminal output format (default: text)')
+    parser.add_argument('--output', type=str, metavar='FILENAME',
+                       help='Save output to markdown file (in addition to terminal output)')
     
     args = parser.parse_args()
     
@@ -429,18 +503,19 @@ def main():
     hidden_gems = analyzer.filter_hidden_gems(repo_stars)
     
     # Step 5: Output results
-    if args.output == 'json':
+    if args.format == 'json':
         output = generate_json_output(args.username, len(audience), repo_stars, user_follows, hidden_gems)
         json_str = json.dumps(output, indent=2)
-        
-        if args.output_file:
-            with open(args.output_file, 'w') as f:
-                f.write(json_str)
-            console.print(f"[green]✓ Results saved to {args.output_file}[/green]")
-        else:
-            print(json_str)
+        print(json_str)
     else:
         print_text_report(args.username, len(audience), repo_stars, user_follows, hidden_gems)
+    
+    # Save markdown output if requested
+    if args.output:
+        markdown_output = generate_markdown_output(args.username, len(audience), repo_stars, user_follows, hidden_gems)
+        with open(args.output, 'w') as f:
+            f.write(markdown_output)
+        console.print(f"[green]✓ Markdown output saved to {args.output}[/green]")
     
     console.print(f"\n[green]✓ Analysis complete![/green]")
     console.print(f"[dim]API calls remaining: {api_client.rate_limit_remaining}[/dim]\n")
