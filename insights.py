@@ -255,6 +255,20 @@ class NetworkAnalyzer:
         return gems
 
 
+def is_safe_github_url(url: str) -> bool:
+    """Validate that URL is a safe GitHub URL."""
+    if not url:
+        return False
+    return url.startswith('https://github.com/')
+
+
+def escape_markdown_table_content(text: str) -> str:
+    """Escape special characters for markdown table content."""
+    if not text:
+        return ""
+    return text.replace('|', '\\|')
+
+
 def print_text_report(target_user: str, audience_size: int, repo_stars: Dict[str, Dict], 
                      user_follows: Dict[str, int], hidden_gems: List[Tuple[str, Dict]]):
     """Print a formatted text report."""
@@ -276,8 +290,9 @@ def print_text_report(target_user: str, audience_size: int, repo_stars: Dict[str
     table.add_column("Description", style="white", overflow="fold")
     
     for idx, (repo_name, data) in enumerate(sorted_repos, 1):
-        # Make repository name clickable if URL is available
-        repo_display = f"[link={data['url']}]{repo_name}[/link]" if data.get('url') else repo_name
+        # Make repository name clickable if URL is available and valid
+        url = data.get('url', '')
+        repo_display = f"[link={url}]{repo_name}[/link]" if is_safe_github_url(url) else repo_name
         desc = data['description'] or ""
         table.add_row(
             str(idx),
@@ -301,8 +316,9 @@ def print_text_report(target_user: str, audience_size: int, repo_stars: Dict[str
     table.add_column("Description", style="white", overflow="fold")
     
     for idx, (repo_name, data) in enumerate(hidden_gems[:10], 1):
-        # Make repository name clickable if URL is available
-        repo_display = f"[link={data['url']}]{repo_name}[/link]" if data.get('url') else repo_name
+        # Make repository name clickable if URL is available and valid
+        url = data.get('url', '')
+        repo_display = f"[link={url}]{repo_name}[/link]" if is_safe_github_url(url) else repo_name
         desc = data['description'] or ""
         table.add_row(
             str(idx),
@@ -356,11 +372,10 @@ def generate_markdown_output(target_user: str, audience_size: int, repo_stars: D
     lines.append("|------|------------|---------------|--------------|-------------|")
     
     for idx, (repo_name, data) in enumerate(sorted_repos, 1):
-        # Make repository name a markdown link
-        repo_link = f"[{repo_name}]({data['url']})" if data.get('url') else repo_name
-        desc = data['description'] or ""
-        # Escape pipe characters in description
-        desc = desc.replace('|', '\\|')
+        # Make repository name a markdown link if URL is valid
+        url = data.get('url', '')
+        repo_link = f"[{repo_name}]({url})" if is_safe_github_url(url) else repo_name
+        desc = escape_markdown_table_content(data['description'] or "")
         lines.append(f"| {idx} | {repo_link} | {data['count']} | {data['global_stars']} | {desc} |")
     
     # Hidden Gems
@@ -370,11 +385,10 @@ def generate_markdown_output(target_user: str, audience_size: int, repo_stars: D
     lines.append("|------|------------|---------------|--------------|-------------|")
     
     for idx, (repo_name, data) in enumerate(hidden_gems[:10], 1):
-        # Make repository name a markdown link
-        repo_link = f"[{repo_name}]({data['url']})" if data.get('url') else repo_name
-        desc = data['description'] or ""
-        # Escape pipe characters in description
-        desc = desc.replace('|', '\\|')
+        # Make repository name a markdown link if URL is valid
+        url = data.get('url', '')
+        repo_link = f"[{repo_name}]({url})" if is_safe_github_url(url) else repo_name
+        desc = escape_markdown_table_content(data['description'] or "")
         lines.append(f"| {idx} | {repo_link} | {data['count']} | {data['global_stars']} | {desc} |")
     
     # Influential People
