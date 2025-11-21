@@ -123,7 +123,7 @@ class NetworkAnalyzer:
         stargazers = self.api.get_paginated(
             f"/repos/{owner}/{repo}/stargazers",
             per_page=100,
-            max_pages=max_count // 100 + 1 if max_count else None
+            max_pages=max_count // 100 + 1 if max_count and max_count > 0 else None
         )
         usernames = [s['login'] for s in stargazers if 'login' in s]
         if max_count:
@@ -136,7 +136,7 @@ class NetworkAnalyzer:
         followers = self.api.get_paginated(
             f"/users/{username}/followers",
             per_page=100,
-            max_pages=max_count // 100 + 1 if max_count else None
+            max_pages=max_count // 100 + 1 if max_count and max_count > 0 else None
         )
         usernames = [f['login'] for f in followers if 'login' in f]
         if max_count:
